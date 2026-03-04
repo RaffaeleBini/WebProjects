@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de Sándwiches Mixtos en Santiago</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <style>
+        /* Custom map height */
+        #map { height: 500px; z-index: 1; }
+        /* Smooth scrolling */
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <header class="bg-amber-600 text-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-6 flex justify-between items-center">
+            <h1 class="text-2xl md:text-3xl font-bold flex items-center gap-2">
+                🥪 Guía del Sándwich Mixto
+            </h1>
+            <nav>
+                <a href="#cafeterias" class="hover:text-amber-200 font-medium mx-2 transition">Cafeterías</a>
+                <a href="#mapa" class="hover:text-amber-200 font-medium mx-2 transition">Mapa</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="bg-amber-100 py-12 md:py-20 text-center px-4">
+        <h2 class="text-4xl md:text-5xl font-extrabold text-amber-900 mb-4">Encuentra el mejor Mixto en Santiago</h2>
+        <p class="text-lg text-amber-800 max-w-2xl mx-auto">Una ruta gastronómica imprescindible para descubrir las cafeterías de Santiago de Compostela a través de su sándwich mixto. Compara, elige y disfruta.</p>
+    </section>
+
+    <section id="cafeterias" class="container mx-auto px-4 py-16">
+        <h2 class="text-3xl font-bold text-gray-800 border-b-4 border-amber-500 inline-block pb-2 mb-10">Ranking y Opciones</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="cards-container">
+            </div>
+    </section>
+
+    <section id="mapa" class="bg-white py-16">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-gray-800 border-b-4 border-amber-500 inline-block pb-2 mb-10">Mapa Interactivo</h2>
+            <div id="map" class="rounded-xl shadow-lg border-2 border-gray-200 overflow-hidden"></div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-900 text-gray-400 py-8 text-center">
+        <p>&copy; 2026 Guía de Sándwiches Mixtos en Santiago de Compostela.</p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+    <script>
+        // Data derived from the provided document
+        const cafes = [
+            { 
+                name: "Café Venecia", 
+                price: "4,80 € (Café solo + Sándwich mixto)", 
+                img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80",
+                lat: 42.879, lng: -8.545, badge: ""
+            },
+            { 
+                name: "Café San Lázaro", 
+                price: "5,00 € (Café solo + Sándwich mixto)", 
+                img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80",
+                lat: 42.880, lng: -8.530, badge: ""
+            },
+            { 
+                name: "Cafetería Xope", 
+                price: "4,50 € (Café solo + Sándwich mixto)", 
+                img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80",
+                lat: 42.875, lng: -8.540, badge: ""
+            },
+            { 
+                name: "Café Lido", 
+                price: "6,10 € (Café solo + Sándwich mixto)", 
+                img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80",
+                lat: 42.876, lng: -8.544, badge: ""
+            },
+            { 
+                name: "Cafetería Senda 49", 
+                price: "5,10 € (Café solo + Sándwich mixto)", 
+                img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80",
+                lat: 42.870, lng: -8.546, badge: ""
+            },
+            { 
+                name: "Café D'Lucía", 
+                price: "5,30 € (Café solo + Sándwich mixto)", 
+                img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80",
+                lat: 42.877, lng: -8.552, badge: ""
+            },
+            { 
+                name: "O Lagar do Estudante", 
+                price: "2,50 € (Sándwich mixto)", 
+                img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80",
+                lat: 42.885, lng: -8.542, badge: "Económico"
+            },
+            { 
+                name: "Cervecería San Patricio", 
+                price: "2,30 € (Cerveza + Sándwich Mixto)", 
+                img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80",
+                lat: 42.882, lng: -8.548, badge: "Económico"
+            },
+            { 
+                name: "El Cafetín - TOP -", 
+                price: "4,30 € (Café solo + Sándwich mixto)", 
+                img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80",
+                lat: 42.879, lng: -8.543, badge: "Recomendado"
+            },
+            { 
+                name: "Cafetería Arosa", 
+                price: "5,30 € (Café solo + Sándwich mixto)", 
+                img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80",
+                lat: 42.881, lng: -8.547, badge: ""
+            }
+        ];
+
+        // --- RENDER CARDS ---
+        const container = document.getElementById("cards-container");
+        
+        cafes.forEach(cafe => {
+            let badgeHTML = cafe.badge ? `<span class="absolute top-4 right-4 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg z-10">${cafe.badge}</span>` : "";
+            
+            const card = document.createElement('div');
+            card.className = "bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-2xl transition transform hover:-translate-y-2 duration-300 relative group border border-gray-100";
+            
+            card.innerHTML = `
+                ${badgeHTML}
+                <div class="h-56 overflow-hidden">
+                    <img src="${cafe.img}" alt="${cafe.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2 border-l-4 border-amber-500 pl-3">${cafe.name}</h3>
+                    <p class="text-amber-700 font-semibold bg-amber-50 rounded-lg p-3 inline-block mt-2 flex items-center gap-2">
+                        <span>🏷️</span> ${cafe.price}
+                    </p>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        // --- INIT MAP ---
+        // Centers map in Santiago de Compostela [42.8782, -8.5448]
+        const santiagoCoordinates = [42.8782, -8.5448];
+        const map = L.map('map', {
+            center: santiagoCoordinates,
+            zoom: 14,
+            scrollWheelZoom: false
+        });
+
+        // Add OpenStreetMap tiles (free and open source, no API key)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add markers
+        cafes.forEach(cafe => {
+            const marker = L.marker([cafe.lat, cafe.lng]).addTo(map);
+            marker.bindPopup(`<b>${cafe.name}</b><br>${cafe.price}`);
+        });
+    </script>
+</body>
+</html>
